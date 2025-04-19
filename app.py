@@ -5,7 +5,12 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://iplfans.live", "http://localhost:3000"]}})
+CORS(app, resources={r"/*": {
+    "origins": ["https://iplfans.live", "http://localhost:3000", "http://localhost:8000"],
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"],
+    "supports_credentials": True
+}})
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///iplvotes.db'
