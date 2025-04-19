@@ -51,25 +51,45 @@ def home():
 @app.route('/vote', methods=['POST'])
 def vote():
     try:
+        # Check if request has JSON data
+        if not request.is_json:
+            return jsonify({"error": "Content-Type must be application/json"}), 400
+            
         data = request.get_json()
-        team_name = data.get('team_name', '').strip()
         
-        if not team_name:
+        # Check if team_name exists in request
+        if 'team_name' not in data:
             return jsonify({"error": "Team name is required"}), 400
             
-        if team_name not in VALID_TEAMS:
-            return jsonify({"error": "Invalid team name"}), 400
+        team_name = data['team_name'].strip()
         
-        # Create new vote
+        # Validate team name
+        if not team_name:
+            return jsonify({"error": "Team name cannot be empty"}), 400
+            
+        if team_name not in VALID_TEAMS:
+            return jsonify({
+                "error": "Invalid team name",
+                "valid_teams": VALID_TEAMS
+            }), 400
+        
+        # Create and save new vote
         new_vote = Vote(team_name=team_name)
         db.session.add(new_vote)
         db.session.commit()
         
-        return jsonify({"message": f"Vote recorded for {team_name}"}), 201
+        return jsonify({
+            "message": f"Vote recorded for {team_name}",
+            "team": team_name,
+            "timestamp": new_vote.timestamp.isoformat()
+        }), 201
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": "An error occurred while processing your vote"}), 500
+        return jsonify({
+            "error": "An error occurred while processing your vote",
+            "details": str(e)
+        }), 500
 
 @app.route('/stats')
 def stats():
